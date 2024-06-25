@@ -1,0 +1,18 @@
+builders:
+
+  - name: Python
+    platform: docker-python3.11
+
+    plugins:
+      - name: python-venv
+        pyversion: python3.11
+        extra_indexes:
+          - https://pypi.poraodojuca.dev
+
+
+    steps:
+      - name: Setup env
+        command: ./scripts/env.sh
+
+      - name: Unit tests & coverage
+        command: ./scripts/check_coverage.sh
