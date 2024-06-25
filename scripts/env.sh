@@ -6,3 +6,4 @@ docker run -d --network=host rabbitmq:latest
 sleep 3
 
 echo $SECRETS | base64 -d > testdata/secrets.json
+cat testdata/secrets.json
