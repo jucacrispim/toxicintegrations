@@ -62,7 +62,7 @@ def user_redirected_from_githbu(context):
 @when('he is redirected to the login page')
 def user_redirected_to_main_page(context):
     browser = context.browser
-    login = browser.find_element_by_class_name('login-container')
+    login = browser.find_element(By.CLASS_NAME, 'login-container')
     assert login
 
 

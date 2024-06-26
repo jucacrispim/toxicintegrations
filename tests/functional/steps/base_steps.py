@@ -17,15 +17,22 @@
 # along with toxicintegrations. If not, see <http://www.gnu.org/licenses/>.
 
 from selenium.webdriver.common.by import By
-from toxicwebui import settings
-from behave import given
+from toxicintegrations import settings
+from toxicwebui import settings as ui_settings
+from behave import given, when
+
+
+@when('he goes to the repository settings interface')
+def go_repo_settings_page(context):
+    browser = context.browser
+    browser.get(settings.TOXICUI_URL + 'settings/repositories')
 
 
 @given('the user is logged in the web interface')
 def logged_in_webui(context):
     browser = context.browser
-    base_url = 'http://{}:{}/'.format(settings.TEST_WEB_HOST,
-                                      settings.TORNADO_PORT)
+    base_url = 'http://{}:{}/'.format(ui_settings.TEST_WEB_HOST,
+                                      ui_settings.TORNADO_PORT)
     url = base_url + 'login'
     browser.get(url)
 

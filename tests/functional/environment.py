@@ -101,7 +101,7 @@ def quit_browser(context):
 async def del_repo(context):
     """Deletes the repositories created in tests."""
 
-    from toxicbuild.common.exchanges import scheduler_action, conn
+    from toxiccommon.exchanges import scheduler_action, conn
 
     from toxicmaster import settings as master_settings
     await conn.connect(**master_settings.RABBITMQ_CONNECTION)
@@ -380,9 +380,6 @@ def stop_webui():
     cmd = ['export', 'PYTHONPATH="{}"'.format(SOURCE_DIR), '&&',
            cmd, 'stop', DATA_DIR,
            '--pidfile', pidfile]
-
-    if conf:
-        cmd += ['-c', conf]
 
     os.system(' '.join(cmd))
 

@@ -37,3 +37,4 @@ tests/functional/data/poller/src/
 docs/source/apidoc/
 /ops/docker/poller.env
 /testdata/src/*
+/testdata/toxictest.2018-05-19.private-key.pem
