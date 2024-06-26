@@ -16,3 +16,24 @@ builders:
 
       - name: Unit tests & coverage
         command: ./scripts/check_coverage.sh
+
+  - name: Selenium
+    platform: docker-python3.11
+    plugins:
+      - name: apt-install
+        packages:
+          - chromium-driver
+          - xvfb
+          - psmisc
+
+      - name: python-venv
+        pyversion: python3.11
+        extra_indexes:
+          - https://pypi.poraodojuca.dev
+
+      - name: Setup env
+        command: ./scripts/env.sh
+
+      - name: Run selenium tests
+        command: ./scripts/run_selenium_tests.sh
+        warning_on_fail: true
