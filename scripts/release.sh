@@ -7,6 +7,6 @@ python -m build
 cd dist
 
 fname=`ls | grep tar`
-project_name=toxicwebui
+project_name=toxicintegrations
 
 curl -F file=@$fname -F prefix=$project_name https://pypi.poraodojuca.dev/u/ -H "Authorization: Key $PYPI_AUTH_KEY"
