@@ -47,7 +47,7 @@ NOTIFICATIONS_API_TOKEN = os.environ.get(
 
 
 TORNADO_PORT = int(os.environ.get('INTEGRATIONS_WEB_PORT', 9999))
-APPLICATIONS = ['toxicbuild.integrations.webhook_receivers.app']
+APPLICATIONS = ['toxicintegrations.webhook_receivers.app']
 
 # This cookie secret must be the same used in toxicui.
 TORNADO_OPTS = {

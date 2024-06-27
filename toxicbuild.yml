@@ -38,3 +38,42 @@ builders:
       - name: Run selenium tests
         command: ./scripts/run_selenium_tests.sh
         warning_on_fail: true
+
+
+  - name: Docs & release
+    branches:
+      - master
+
+    platform: docker-python3.11
+
+    triggered_by:
+      - builder_name: Python
+        statuses:
+          - success
+
+      - builder_name: Selenium
+        statuses:
+          - success
+          - warning
+
+    plugins:
+      - name: apt-install
+        packages:
+          - curl
+          - make
+
+      - name: python-venv
+        pyversion: python3.11
+        extra_indexes:
+          - https://pypi.poraodojuca.dev
+
+    steps:
+
+      - name: Build docs
+        command: ./scripts/build_docs.sh
+
+      - name: upload docs
+        command: ./scripts/upload_docs.sh
+
+      - name: Release
+        command: ./scripts/release.sh
