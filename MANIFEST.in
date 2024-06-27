@@ -1,0 +1,3 @@
+recursive-include toxicintegrations/templates *
+
+recursive-exclude toxicbuildintegrations/templates *~

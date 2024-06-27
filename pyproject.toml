@@ -1,4 +1,4 @@
-[build-system]
+	[build-system]
 requires = [
     "setuptools >= 65",
     "wheel >= 0.38",
@@ -41,6 +41,7 @@ classifiers = [
 where = ["."]
 exclude = ["tests*", "testdata*"]
 include = ["toxicintegrations*"]
+namespace = true
 
 [tool.setuptools.dynamic]
 version = {attr = "toxicintegrations.__version__"}
