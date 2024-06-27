@@ -41,7 +41,7 @@ classifiers = [
 where = ["."]
 exclude = ["tests*", "testdata*"]
 include = ["toxicintegrations*"]
-namespace = true
+namespaces = true
 
 [tool.setuptools.dynamic]
 version = {attr = "toxicintegrations.__version__"}
