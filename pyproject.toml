@@ -45,3 +45,6 @@ namespaces = true
 
 [tool.setuptools.dynamic]
 version = {attr = "toxicintegrations.__version__"}
+
+[project.scripts]
+toxicintegrations = "toxicintegrations.cmds:main"
