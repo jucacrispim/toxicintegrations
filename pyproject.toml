@@ -19,6 +19,7 @@ dependencies = [
     'toxiccommon>=0.10.0',
     'toxicnotifications>=0.10.0',
     'PyJWT==2.6.0',
+    'cryptography==41.0.0',
 ]
 
 classifiers = [

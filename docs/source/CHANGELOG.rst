@@ -1,6 +1,10 @@
 Changelog
 =========
 
+* V0.10.2
+
+  - Fix deps
+
 * V0.10.1
 
   - Fix packaging
