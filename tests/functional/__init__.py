@@ -18,7 +18,7 @@ class SeleniumBrowserException(Exception):
     pass
 
 
-class SeleniumBrowser(uc.Chrome):
+class SeleniumBrowser(webdriver.Chrome):
 
     def __init__(self, *args, **kwargs):
         options = webdriver.ChromeOptions()
@@ -29,8 +29,8 @@ class SeleniumBrowser(uc.Chrome):
         options.add_experimental_option('useAutomationExtension', False)
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--disable-dev-shm-usage')
-        kwargs['version_main'] = int(os.environ.get('CHROME_VERSION', 102))
-        super().__init__(*args, chrome_options=options, **kwargs)
+        # kwargs['version_main'] = int(os.environ.get('CHROME_VERSION', 102))
+        super().__init__(*args, options=options, **kwargs)
         # self.maximize_window()
         self.implicitly_wait(10)
 
