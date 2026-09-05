@@ -35,6 +35,9 @@ builders:
       - name: Setup env
         command: ./scripts/env.sh
 
+      - name: Setup staging venvs
+        command: ./scripts/create_staging_envs.sh
+
       - name: Run selenium tests
         command: ./scripts/run_selenium_tests.sh
         warning_on_fail: true
