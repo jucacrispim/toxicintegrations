@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with toxicbuild. If not, see <http://www.gnu.org/licenses/>.
 
-from aiohttp import BasicAuth
+from aiohttp import encode_basic_auth
 import re
 
 from toxicintegrations import settings
@@ -36,8 +36,7 @@ class BitbucketApp(BaseIntegrationApp):
         return app
 
     def get_auth(self):
-        auth = BasicAuth(self.app_id, self.secret)
-        return auth
+        return encode_basic_auth(self.app_id, self.secret)
 
 
 class BitbucketIntegration(BaseIntegration):
@@ -57,13 +56,13 @@ class BitbucketIntegration(BaseIntegration):
         url = settings.BITBUCKET_URL + 'site/oauth2/access_token'
         app = await self.APP_CLS.get_app()
         auth = app.get_auth()
-        sesskw = {'auth': auth}
+        headers = {'Authorization': auth}
 
         params = {'client_secret': app.secret,
                   'code': self.code,
                   'grant_type': 'authorization_code'}
 
-        r = await self.request2api('post', url, sesskw=sesskw, data=params)
+        r = await self.request2api('post', url, headers=headers, data=params)
         r = r.json()
         # bitbucket tokens expire in one hour. Don't use the
         # expires_in response
@@ -77,12 +76,12 @@ class BitbucketIntegration(BaseIntegration):
 
         app = await self.APP_CLS.get_app()
         auth = app.get_auth()
-        sesskw = {'auth': auth}
+        headers = {'Authorization': auth}
 
         params = {'refresh_token': self.refresh_token,
                   'grant_type': 'refresh_token'}
 
-        r = await self.request2api('post', url, sesskw=sesskw, data=params)
+        r = await self.request2api('post', url, headers=headers, data=params)
         r = r.json()
         self.access_token = r['access_token']
         # expires_in = r['expires_in']
@@ -160,7 +159,7 @@ class BitbucketIntegration(BaseIntegration):
         url = get_clone_url(repo_info['links']['clone'])
         # the url returned by bitbucket has a username@ in the url.
         # Remove it 'cause we use a token based auth.
-        p = re.compile('\w+://(.*@).+')
+        p = re.compile(r'\w+://(.*@).+')
         m = p.match(url).groups()[0]
         url = url.replace(m, '')
         d = {

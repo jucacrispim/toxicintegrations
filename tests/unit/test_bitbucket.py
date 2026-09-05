@@ -59,7 +59,7 @@ class BitbucketAppTest(TestCase):
     @async_test
     async def test_get_auth(self):
         auth = self.app.get_auth()
-        self.assertIsInstance(auth, bitbucket.BasicAuth)
+        self.assertTrue(auth.startswith('Basic '))
 
 
 @patch.object(bitbucket, 'settings', Mock(
