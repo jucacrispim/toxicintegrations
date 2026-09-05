@@ -1,4 +1,4 @@
-	[build-system]
+[build-system]
 requires = [
     "setuptools >= 65",
     "wheel >= 0.38",
@@ -15,11 +15,12 @@ description = "toxicintegrations: My super cool project"
 readme = "README.md"
 
 dependencies = [
-    'toxiccore>=0.13.3',
-    'toxiccommon>=0.10.0',
-    'toxicnotifications>=0.10.0',
+    'toxiccore==0.13.4',
+    'toxiccommon==0.11.0',
+    'toxicnotifications==0.11.3',
     'PyJWT==2.6.0',
     'cryptography==41.0.0',
+    'pyrocumulus==0.12.9',
 ]
 
 classifiers = [
