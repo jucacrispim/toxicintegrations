@@ -1,11 +1,11 @@
 builders:
 
   - name: Python
-    platform: docker-python3.11
+    platform: docker-python3.13
 
     plugins:
       - name: python-venv
-        pyversion: python3.11
+        pyversion: python3.13
         extra_indexes:
           - https://pypi.poraodojuca.dev
 
@@ -18,7 +18,7 @@ builders:
         command: ./scripts/check_coverage.sh
 
   - name: Selenium
-    platform: docker-python3.11
+    platform: docker-python3.13
     plugins:
       - name: apt-install
         packages:
@@ -27,7 +27,7 @@ builders:
           - psmisc
 
       - name: python-venv
-        pyversion: python3.11
+        pyversion: python3.13
         extra_indexes:
           - https://pypi.poraodojuca.dev
 
@@ -47,7 +47,7 @@ builders:
     branches:
       - master
 
-    platform: docker-python3.11
+    platform: docker-python3.13
 
     triggered_by:
       - builder_name: Python
@@ -66,7 +66,7 @@ builders:
           - make
 
       - name: python-venv
-        pyversion: python3.11
+        pyversion: python3.13
         extra_indexes:
           - https://pypi.poraodojuca.dev
 
