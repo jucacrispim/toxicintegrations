@@ -1,6 +1,10 @@
 Changelog
 =========
 
+* v0.10.4
+
+  - Refactor on tests and update deps
+
 * v0.10.3
 
   - Update toxiccore

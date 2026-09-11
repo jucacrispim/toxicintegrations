@@ -34,7 +34,7 @@ from mongomotor import connect
 from toxiccore.conf import Settings
 
 
-__version__ = '0.10.3'
+__version__ = '0.10.4'
 
 ENVVAR = 'TOXICINTEGRATIONS_SETTINGS'
 DEFAULT_SETTINGS = 'toxicintegrations.conf'
