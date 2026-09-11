@@ -24,12 +24,12 @@ import jwt
 from mongomotor.fields import StringField, DateTimeField, IntField
 from toxiccore import requests
 from toxiccore.utils import (string2datetime, now, localtime2utc,
-                                   utc2localtime)
+                             utc2localtime)
 from toxicintegrations import settings
 from toxicintegrations.base import (BaseIntegrationApp,
-                                          BaseIntegration)
+                                    BaseIntegration)
 from toxicintegrations.exceptions import (BadRequestToExternalAPI,
-                                                BadSignature)
+                                          BadSignature)
 
 __doc__ = """This module implements the integration with Github. It is
 a `GithubApp <https://developer.github.com/apps/>`_  that reacts to events

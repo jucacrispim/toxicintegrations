@@ -61,8 +61,8 @@ class GitlabIntegrationTest(TestCase):
 
     @async_test
     async def tearDown(self):
-        gitlab.GitlabApp.drop_collection()
-        gitlab.GitlabIntegration.drop_collection()
+        await gitlab.GitlabApp.drop_collection()
+        await gitlab.GitlabIntegration.drop_collection()
 
     @patch.object(gitlab.GitlabIntegration, 'get_headers', AsyncMock(
         return_value={}))

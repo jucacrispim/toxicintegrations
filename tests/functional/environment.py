@@ -22,17 +22,16 @@ import socket
 import sys
 import time
 
-import bcrypt
-from pyrocumulus.auth import AccessToken
-
 from toxiccore.utils import log, bcrypt_string
-from toxicmaster import create_settings_and_connect
-from toxicslave import create_settings
-from toxicwebui import create_settings as create_settings_ui
-from toxicpoller import create_settings as create_settings_poller
+from toxicintegrations import create_settings_and_connect
+import toxicintegrations
 from toxicnotifications import (
     create_settings_and_connect as create_settings_output)
 from tests import DATA_DIR
+
+
+_LOOP = asyncio.new_event_loop()
+asyncio.set_event_loop(_LOOP)
 
 
 SOURCE_DIR = os.path.join(DATA_DIR, '..')
@@ -105,15 +104,12 @@ if not toxicoutput_conf:
                                     'toxicnotifications.conf')
     os.environ['TOXICNOTIFICATIONS_SETTINGS'] = toxicoutput_conf
 
-create_settings()
 create_settings_and_connect()
 create_settings_output()
-create_settings_poller()
-create_settings_ui()
 
-from toxicmaster.users import User  # noqa f402
+settings = toxicintegrations.settings
+
 from tests.functional import SeleniumBrowser  # noqa f402
-from toxicwebui import settings as settings_ui  # noqa f402
 
 
 def create_browser(context):
@@ -131,39 +127,79 @@ def quit_browser(context):
     context.browser.quit()
 
 
+class Requester:
+    """A minimal requester for the interfaces."""
+
+    def __init__(self, id, email='someguy@bla.com'):
+        self.id = id
+        self.email = email
+
+
+async def get_db():
+    from mongomotor.connection import get_connection
+    conn = get_connection()
+    return conn[os.environ.get('DBNAME', 'toxicintegrations-test')]
+
+
 async def del_repo(context):
     """Deletes the repositories created in tests."""
 
     from toxiccommon.exchanges import scheduler_action, conn
 
-    from toxicmaster import settings as master_settings
-    await conn.connect(**master_settings.RABBITMQ_CONNECTION)
+    await conn.connect(**settings.RABBITMQ_CONNECTION)
 
     await scheduler_action.declare()
     await scheduler_action.queue_delete()
     await scheduler_action.connection.disconnect()
 
-    from toxicmaster.repository import Repository as RepoModel
-
-    await RepoModel.drop_collection()
+    db = await get_db()
+    await db['repository'].drop()
 
 
 async def create_root_user(context):
-    user = User(id=settings_ui.ROOT_USER_ID, username='already-exists',
-                email='nobody@nowhere.nada', allowed_actions=['add_user'])
-    await user.save(force_insert=True)
+    from bson.objectid import ObjectId
+
+    db = await get_db()
+    coll = db['user']
+    doc = await coll.find_one({'_id': ObjectId(settings.ROOT_USER_ID)})
+    if doc:
+        return
+
+    await coll.insert_one({
+        '_id': ObjectId(settings.ROOT_USER_ID),
+        'email': 'nobody@nowhere.nada',
+        'username': 'already-exists',
+        'allowed_actions': ['add_user'],
+        'organizations': [],
+        'member_of': [],
+    })
 
 
 async def create_user(context):
-    user = User(email='someguy@bla.com', is_superuser=True)
-    user.set_password('123')
-    await user.save()
-    context.user = user
-    context.user.id = str(context.user.id)
+    import bcrypt
+    from bson.objectid import ObjectId
+
+    db = await get_db()
+    coll = db['user']
+    password = bcrypt_string('123', bcrypt.gensalt(8))
+    user_id = ObjectId()
+    await coll.insert_one({
+        '_id': user_id,
+        'email': 'someguy@bla.com',
+        'username': 'someguy',
+        'password': password,
+        'is_superuser': True,
+        'allowed_actions': ['add_user', 'add_repo', 'add_slave',
+                            'remove_user', 'remove_repo', 'remove_slave'],
+        'organizations': [],
+        'member_of': [],
+    })
+    context.user = Requester(user_id)
 
 
 async def del_user(context):
-    await context.user.delete()
+    db = await get_db()
+    await db['user'].delete_many({'username': 'someguy'})
 
 
 def before_all(context):
@@ -171,24 +207,25 @@ def before_all(context):
 
     create_browser(context)
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(create_user(context))
-    loop.run_until_complete(create_root_user(context))
+    _LOOP.run_until_complete(create_user(context))
+    _LOOP.run_until_complete(create_root_user(context))
 
 
 def after_feature(context, feature):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(del_repo(context))
+    _LOOP.run_until_complete(del_repo(context))
 
     from toxicintegrations.github import GithubIntegration
-    loop.run_until_complete(GithubIntegration.drop_collection())
+    _LOOP.run_until_complete(GithubIntegration.drop_collection())
 
 
 def after_all(context):
     stop_all()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(del_user(context))
-    loop.run_until_complete(User.drop_collection())
+    _LOOP.run_until_complete(del_user(context))
+
+    async def drop_users():
+        db = await get_db()
+        await db['user'].drop()
+    _LOOP.run_until_complete(drop_users())
 
     quit_browser(context)
 
@@ -258,8 +295,8 @@ def stop_poller():
 
 
 def wait_master_to_be_alive(root_dir):
-    from toxicmaster import settings
-    HOST = settings.HOLE_ADDR
+    from toxicintegrations import settings
+    HOST = settings.HOLE_HOST
     PORT = settings.HOLE_PORT
     alive = False
     limit = int(os.environ.get('FUNCTESTS_MASTER_START_TIMEOUT', 20))
@@ -347,7 +384,8 @@ def start_notifications(sleep=0.5):
 
     pidfile = 'toxicnotifications{}.pid'.format(PYVERSION)
     cmd = ['export', 'PYTHONPATH="{}"'.format(SOURCE_DIR), '&&',
-           'toxicnotifications', 'start', NOTIFICATIONS_ROOT_DIR, '--daemonize',
+           'toxicnotifications', 'start', NOTIFICATIONS_ROOT_DIR,
+           '--daemonize',
            '--pidfile', pidfile, '--loglevel', 'debug']
 
     if conf:
@@ -400,7 +438,7 @@ def stop_webui():
 
 def start_integrations():
     conf = os.path.join(DATA_DIR, 'toxicintegrations.conf')
-    pidfile = 'toxicwebui{}.pid'.format(PYVERSION)
+    pidfile = 'toxicintegrations{}.pid'.format(PYVERSION)
     cmd = 'python ./toxicintegrations/cmds.py '
     cmd = ['export', 'PYTHONPATH="{}"'.format(SOURCE_DIR), '&&',
            cmd, 'start', DATA_DIR, '--daemonize',
@@ -413,7 +451,7 @@ def start_integrations():
 
 
 def stop_integrations():
-    pidfile = 'toxicwebui{}.pid'.format(PYVERSION)
+    pidfile = 'toxicintegrations{}.pid'.format(PYVERSION)
     cmd = 'python ./toxicintegrations/cmds.py '
     cmd = ['export', 'PYTHONPATH="{}"'.format(SOURCE_DIR), '&&',
            cmd, 'stop', DATA_DIR,
@@ -421,11 +459,3 @@ def stop_integrations():
 
     os.system(' '.join(cmd))
 
-
-async def create_output_access_token():
-    from toxicwebui import settings
-
-    real_token = bcrypt_string(settings.ACCESS_TOKEN_BASE, bcrypt.gensalt(8))
-    token = AccessToken(token_id=settings.ACCESS_TOKEN_ID,
-                        token=real_token)
-    await token.save()

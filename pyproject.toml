@@ -16,7 +16,7 @@ readme = "README.md"
 
 dependencies = [
     'toxiccore==0.13.4',
-    'toxiccommon==0.11.0',
+    'toxiccommon==0.12.1',
     'toxicnotifications==0.11.3',
     'PyJWT==2.6.0',
     'cryptography==41.0.0',

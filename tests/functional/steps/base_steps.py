@@ -18,7 +18,6 @@
 
 from selenium.webdriver.common.by import By
 from toxicintegrations import settings
-from toxicwebui import settings as ui_settings
 from behave import given, when
 
 
@@ -31,9 +30,7 @@ def go_repo_settings_page(context):
 @given('the user is logged in the web interface')
 def logged_in_webui(context):
     browser = context.browser
-    base_url = 'http://{}:{}/'.format(ui_settings.TEST_WEB_HOST,
-                                      ui_settings.TORNADO_PORT)
-    url = base_url + 'login'
+    url = settings.TOXICUI_LOGIN_URL
     browser.get(url)
 
     if not browser.is_logged:

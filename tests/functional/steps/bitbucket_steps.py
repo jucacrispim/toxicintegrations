@@ -34,7 +34,7 @@ def click_bitbucket_import(context):
 @given('the user is in the bitbucket login page')
 def is_in_bitbucket_login_page(context):
     browser = context.browser
-    el = browser.find_element(By.ID, 'username')
+    el = browser.find_element(By.NAME, 'username')
 
     assert el
 
@@ -42,8 +42,10 @@ def is_in_bitbucket_login_page(context):
 @when('he fills the bitbucket username field')
 def fill_username(context):
     browser = context.browser
-    el = browser.find_element(By.ID, 'username')
+    el = browser.find_element(By.NAME, 'username')
     el.send_keys(settings.BITBUCKET_USER)
+    # Atlassian login reveals the password field only after clicking
+    # Continue (#login-submit) with a valid username.
     btn = browser.find_element(By.ID, 'login-submit')
     btn.click()
 
