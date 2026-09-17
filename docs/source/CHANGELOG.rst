@@ -1,6 +1,11 @@
 Changelog
 =========
 
+* v0.10.5
+
+  - Replace ``pkg_resources`` (removed from the stdlib venvs on python 3.12+)
+    with ``importlib.resources`` so ``create`` works on a fresh virtualenv
+
 * v0.10.4
 
   - Refactor on tests and update deps

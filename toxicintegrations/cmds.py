@@ -19,8 +19,8 @@
 # pylint: disable=all
 
 import asyncio
+import importlib.resources
 import os
-import pkg_resources
 import shutil
 import sys
 
@@ -64,8 +64,8 @@ def create(root_dir, access_token='', output_token='', root_user_id='',
     os.makedirs(root_dir)
 
     template_fname = 'toxicintegrations.conf.tmpl'
-    template_dir = pkg_resources.resource_filename('toxicintegrations',
-                                                   'templates')
+    template_dir = importlib.resources.files(
+        'toxicintegrations').joinpath('templates')
     template_file = os.path.join(template_dir, template_fname)
     dest_file = os.path.join(root_dir, 'toxicintegrations.conf')
     shutil.copyfile(template_file, dest_file)
