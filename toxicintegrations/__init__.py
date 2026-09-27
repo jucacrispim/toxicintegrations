@@ -34,7 +34,7 @@ from mongomotor import connect
 from toxiccore.conf import Settings
 
 
-__version__ = '0.10.6'
+__version__ = '0.10.7'
 
 ENVVAR = 'TOXICINTEGRATIONS_SETTINGS'
 DEFAULT_SETTINGS = 'toxicintegrations.conf'
@@ -51,14 +51,14 @@ def create_settings_and_connect():
     dbconn = connect(**dbsettings)
 
 
-def ensure_indexes():
+async def ensure_indexes():
     from .github import GithubApp, GithubIntegration
     from .gitlab import GitlabApp, GitlabIntegration
     from .bitbucket import BitbucketApp, BitbucketIntegration
 
-    GithubApp.ensure_indexes()
-    GithubIntegration.ensure_indexes()
-    GitlabApp.ensure_indexes()
-    GitlabIntegration.ensure_indexes()
-    BitbucketApp.ensure_indexes()
-    BitbucketIntegration.ensure_indexes()
+    await GithubApp.ensure_indexes()
+    await GithubIntegration.ensure_indexes()
+    await GitlabApp.ensure_indexes()
+    await GitlabIntegration.ensure_indexes()
+    await BitbucketApp.ensure_indexes()
+    await BitbucketIntegration.ensure_indexes()

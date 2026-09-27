@@ -1,6 +1,10 @@
 Changelog
 =========
 
+* v0.10.7
+
+  - await ensure_indexes.
+
 * v0.10.6
 
   - Update mongomotor

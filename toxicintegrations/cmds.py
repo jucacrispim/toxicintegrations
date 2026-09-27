@@ -146,7 +146,7 @@ def start(workdir, daemonize=False, stdout=LOGFILE, stderr=LOGFILE,
             handler = IntegrationsOutputMessageHandler()
             asyncio.ensure_future(handler.run())
 
-            ensure_indexes()
+            loop.run_until_complete(ensure_indexes())
 
         print('Starting integrations on port {}'.format(settings.TORNADO_PORT))
 
