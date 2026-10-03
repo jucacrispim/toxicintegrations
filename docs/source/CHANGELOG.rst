@@ -1,6 +1,16 @@
 Changelog
 =========
 
+* v0.11.0
+
+  - Use ``state`` to identify the user on the setup flow instead of the
+    session cookie. The state carries (and signs) the ToxicBuild user id.
+  - GitLab: bind the oauth ``state`` to the user id and use it to resolve
+    the user, dropping the cookie-based lookup.
+  - GitHub: also send the signed ``state`` in the import url.
+  - Requires ``toxiccore>=0.14.0`` (``create_validation_string`` /
+    ``validate_string`` now support carrying data).
+
 * v0.10.7
 
   - await ensure_indexes.

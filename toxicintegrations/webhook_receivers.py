@@ -18,7 +18,6 @@
 # along with toxicbuild. If not, see <http://www.gnu.org/licenses/>.
 
 from asyncio import ensure_future
-import base64
 import json
 from pyrocumulus.web.applications import PyroApplication
 from pyrocumulus.web.decorators import post, get
@@ -144,7 +143,7 @@ class BaseWebhookReceiver(LoggerMixin, BasePyroHandler):
 
     @get('setup')
     async def setup(self):
-        user = await self._get_user_from_cookie()
+        user = await self._get_user_from_state()
         if not user:
             url = '{}?redirect={}'.format(
                 settings.TOXICUI_LOGIN_URL, self.request.full_url())
@@ -154,14 +153,24 @@ class BaseWebhookReceiver(LoggerMixin, BasePyroHandler):
 
         return self.redirect(url)
 
-    async def _get_user_from_cookie(self):
-        cookie = self.get_secure_cookie(settings.TOXICUI_COOKIE)
-        if not cookie:
-            self.log('No cookie found.', level='debug')
+    async def _get_user_from_state(self):
+        """Returns the user bounded to the ``state`` param sent by the
+        external service. The state is validated using the cookie secret
+        and carries the user id.
+        """
+
+        state = self.params.get('state')
+        if not state:
+            self.log('No state found.', level='debug')
             return
 
-        user_dict = json.loads(base64.decodebytes(cookie).decode('utf-8'))
-        user = await UserInterface.get(id=user_dict['id'])
+        secret = settings.TORNADO_OPTS['cookie_secret']
+        user_id = validate_string(state, secret)
+        if not user_id or not isinstance(user_id, str):
+            self.log('Invalid state.', level='debug')
+            return
+
+        user = await UserInterface.get(id=user_id)
         return user
 
     def _parse_body(self):
@@ -210,24 +219,6 @@ class GitlabWebhookReceiver(BaseWebhookReceiver):
     def check_event_type(self):
         body = self.body or {}
         return body.get('object_kind')
-
-    def state_is_valid(self):
-        """Checks if the state hash sent by gitlab is valid.
-        """
-
-        state = self.params.get('state')
-        if not state:
-            raise HTTPError(400)
-
-        secret = settings.TORNADO_OPTS['cookie_secret']
-
-        return validate_string(state, secret)
-
-    def create_installation(self, user):
-        if not self.state_is_valid():
-            raise HTTPError(400)
-
-        return super().create_installation(user)
 
     def get_repo_external_id(self):
         return self.body['project']['id']

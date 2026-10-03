@@ -18,8 +18,6 @@
 # along with toxicbuild. If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import base64
-import json
 from unittest import TestCase
 from unittest.mock import Mock, patch, AsyncMock
 from toxicintegrations import webhook_receivers
@@ -45,23 +43,34 @@ class BaseWebhookReceiverTest(TestCase):
 
     @patch.object(webhook_receivers, 'settings', Mock())
     @async_test
-    async def test_get_user_from_cookie_without_cookie(self):
-        self.webhook_receiver.get_secure_cookie = Mock(return_value=None)
-        user = await self.webhook_receiver._get_user_from_cookie()
+    async def test_get_user_from_state_without_state(self):
+        self.webhook_receiver.params = {}
+        user = await self.webhook_receiver._get_user_from_state()
         self.assertIsNone(user)
 
-    @patch.object(webhook_receivers, 'settings', Mock())
+    @patch.object(webhook_receivers, 'settings',
+                  Mock(TORNADO_OPTS={'cookie_secret': 'asdf'}))
+    @async_test
+    async def test_get_user_from_state_invalid(self):
+        self.webhook_receiver.params = {'state': 'some-state'}
+        with patch.object(webhook_receivers, 'validate_string',
+                          Mock(return_value=False)):
+            user = await self.webhook_receiver._get_user_from_state()
+        self.assertIsNone(user)
+
+    @patch.object(webhook_receivers, 'settings',
+                  Mock(TORNADO_OPTS={'cookie_secret': 'asdf'}))
+    @patch.object(webhook_receivers, 'validate_string',
+                  Mock(return_value='some-id'))
     @patch.object(webhook_receivers.UserInterface, 'get',
                   AsyncMock(spec=webhook_receivers.UserInterface.get))
     @async_test
-    async def test_get_user_from_cookie(self):
+    async def test_get_user_from_state(self):
         user = webhook_receivers.UserInterface(
             None, dict(email='bla@bla.com', id='some-id', name='bla'))
-        cookie = base64.encodebytes(
-            json.dumps({'id': str(user.id)}).encode('utf-8'))
         webhook_receivers.UserInterface.get.return_value = user
-        self.webhook_receiver.get_secure_cookie = Mock(return_value=cookie)
-        ret_user = await self.webhook_receiver._get_user_from_cookie()
+        self.webhook_receiver.params = {'state': 'some-state'}
+        ret_user = await self.webhook_receiver._get_user_from_state()
         self.assertEqual(user.id, ret_user.id)
 
     def test_parse_body(self):
@@ -145,7 +154,7 @@ class BaseWebhookReceiverTest(TestCase):
     async def test_setup_without_user(self):
         # if trying to setup wihtout a user, we should be redireced
         # to the login page of the webui.
-        self.webhook_receiver._get_user_from_cookie = AsyncMock(
+        self.webhook_receiver._get_user_from_state = AsyncMock(
             return_value=None)
         self.webhook_receiver.redirect = Mock()
         await self.webhook_receiver.setup()
@@ -156,7 +165,7 @@ class BaseWebhookReceiverTest(TestCase):
     @patch.object(webhook_receivers, 'settings', Mock())
     @async_test
     async def test_setup_ok(self):
-        self.webhook_receiver._get_user_from_cookie = AsyncMock(
+        self.webhook_receiver._get_user_from_state = AsyncMock(
             return_value=Mock())
         self.webhook_receiver.redirect = Mock()
         self.webhook_receiver.create_installation = Mock()
@@ -539,41 +548,17 @@ class GitlabWebhookReceiverTest(TestCase):
             application, request)
         self.webhook_receiver.prepare()
 
-    def test_state_is_valid_no_state(self):
-        self.webhook_receiver.params = {}
-        with self.assertRaises(webhook_receivers.HTTPError):
-            self.webhook_receiver.state_is_valid()
-
-    @patch.object(webhook_receivers, 'settings', Mock())
-    @patch('toxiccore.utils.log')
-    def test_state_is_valid(self, *a, **kw):
-        webhook_receivers.settings.TORNADO_OPTS = {
-            'cookie_secret': 'some-secret'}
-        self.webhook_receiver.params = {'state': 'some-state'}
-        r = self.webhook_receiver.state_is_valid()
-        self.assertFalse(r)
-
-    @patch.object(webhook_receivers.GitlabWebhookReceiver, 'state_is_valid',
-                  Mock(return_value=False))
-    def test_create_installation_invalid_state(self):
+    @async_test
+    async def test_create_installation(self):
+        # gitlab does not validate the state anymore. The identity comes
+        # from the state in ``_get_user_from_state``.
         user = Mock()
-        self.webhook_receiver.params = {'code': 'some-code',
-                                        'state': 'some-state'}
-        with self.assertRaises(webhook_receivers.HTTPError):
-            self.webhook_receiver.create_installation(user)
-
-    @patch.object(webhook_receivers.GitlabWebhookReceiver, 'state_is_valid',
-                  Mock(return_value=True))
-    @patch.object(
-        webhook_receivers.BaseWebhookReceiver, 'create_installation',
-        Mock(spec=webhook_receivers.BaseWebhookReceiver.create_installation))
-    def test_create_installation_ok(self):
-        user = Mock()
+        self.webhook_receiver.INSTALL_CLS = Mock()
+        self.webhook_receiver.INSTALL_CLS.create = AsyncMock()
         self.webhook_receiver.params = {'code': 'some-code',
                                         'state': 'some-state'}
         self.webhook_receiver.create_installation(user)
-        self.assertTrue(
-            webhook_receivers.BaseWebhookReceiver.create_installation.called)
+        self.assertTrue(self.webhook_receiver.INSTALL_CLS.create.called)
 
     def test_check_event_type(self):
 

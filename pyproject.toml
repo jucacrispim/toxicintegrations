@@ -15,9 +15,9 @@ description = "toxicintegrations: My super cool project"
 readme = "README.md"
 
 dependencies = [
-    'toxiccore==0.13.4',
+    'toxiccore==0.14.0',
     'toxiccommon==0.11.0',
-    'toxicnotifications==0.11.6',
+    'toxicnotifications==0.11.7',
     'PyJWT==2.6.0',
     'cryptography==41.0.0',
     'pyrocumulus==0.12.9',
